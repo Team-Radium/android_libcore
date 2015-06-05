@@ -726,15 +726,15 @@ static jobjectArray Posix_android_getaddrinfo(JNIEnv* env, jobject, jstring java
 }
 
 static jint Posix_getegid(JNIEnv*, jobject) {
-    return getegid();
+    return TEMP_FAILURE_RETRY(getegid());
 }
 
 static jint Posix_geteuid(JNIEnv*, jobject) {
-    return geteuid();
+    return TEMP_FAILURE_RETRY(geteuid());
 }
 
 static jint Posix_getgid(JNIEnv*, jobject) {
-    return getgid();
+    return TEMP_FAILURE_RETRY(getgid());
 }
 
 static jstring Posix_getenv(JNIEnv* env, jobject, jstring javaName) {
@@ -875,7 +875,7 @@ static jint Posix_gettid(JNIEnv* env __unused, jobject) {
 }
 
 static jint Posix_getuid(JNIEnv*, jobject) {
-    return getuid();
+    return TEMP_FAILURE_RETRY(getuid());
 }
 
 static jstring Posix_if_indextoname(JNIEnv* env, jobject, jint index) {
