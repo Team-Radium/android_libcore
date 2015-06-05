@@ -103,7 +103,7 @@ public class OldAndroidMonitorTest extends TestCase {
     }
 
     private class Interrupter extends Thread {
-            private final Waiter waiter;
+            Waiter waiter;
 
             Interrupter(String name, Waiter waiter) {
                 super(name);
@@ -119,7 +119,8 @@ public class OldAndroidMonitorTest extends TestCase {
                 }
             }
 
-            private void run_inner() {
+            void run_inner() {
+                waiter.spin = true;
                 // System.out.println("InterruptTest: starting waiter");
                 waiter.start();
 
@@ -167,7 +168,7 @@ public class OldAndroidMonitorTest extends TestCase {
 
     private class Waiter extends Thread {
             Object interrupterLock = new Object();
-            volatile boolean spin = true;
+            Boolean spin = false;
 
             Waiter(String name) {
                 super(name);
@@ -187,7 +188,6 @@ public class OldAndroidMonitorTest extends TestCase {
                 while (spin) {
                     // We're going to get interrupted while we spin.
                 }
-
                 if (interrupted()) {
                     // System.out.println("Waiter done spinning; interrupted.");
                 } else {
@@ -196,7 +196,7 @@ public class OldAndroidMonitorTest extends TestCase {
                 }
 
                 synchronized (this) {
-                    boolean sawEx = false;
+                    Boolean sawEx = false;
 
                     try {
                         synchronized (interrupterLock) {
@@ -216,7 +216,7 @@ public class OldAndroidMonitorTest extends TestCase {
                     }
                 }
                 synchronized (this) {
-                    boolean sawEx = false;
+                    Boolean sawEx = false;
 
                     try {
                         synchronized (interrupterLock) {
@@ -236,7 +236,7 @@ public class OldAndroidMonitorTest extends TestCase {
                     }
                 }
                 synchronized (this) {
-                    boolean sawEx = false;
+                    Boolean sawEx = false;
 
                     try {
                         synchronized (interrupterLock) {
