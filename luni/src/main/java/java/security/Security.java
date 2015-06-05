@@ -19,8 +19,6 @@ package java.security;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -49,35 +47,21 @@ public final class Security {
     // - load security properties files
     // - load statically registered providers
     // - if no provider description file found then load default providers
-    // Note: Getting the input stream for the security.properties file is factored into its own
-    //       function, which will be intercepted during boot image creation.
     static {
         boolean loaded = false;
-        Reader input = null;
         try {
-            input = getSecurityPropertiesReader();
+            InputStream configStream = Security.class.getResourceAsStream("security.properties");
+            InputStream input = new BufferedInputStream(configStream);
             secprops.load(input);
             loaded = true;
+            configStream.close();
         } catch (Exception ex) {
             System.logE("Could not load 'security.properties'", ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (Exception ex) {
-                    System.logW("Could not close 'security.properties'", ex);
-                }
-            }
         }
         if (!loaded) {
             registerDefaultProviders();
         }
         Engine.door = new SecurityDoor();
-    }
-
-    private static Reader getSecurityPropertiesReader() throws Exception {
-        InputStream configStream = Security.class.getResourceAsStream("security.properties");
-        return new InputStreamReader(new BufferedInputStream(configStream), "ISO-8859-1");
     }
 
     /**

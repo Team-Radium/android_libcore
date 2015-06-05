@@ -63,24 +63,6 @@ public class Services {
     private static final ArrayList<Provider> providers = new ArrayList<Provider>(20);
 
     /**
-     * Try to load and register a provider by name from the given class-loader.
-     */
-    private static boolean initProvider(String providerClassName, ClassLoader classLoader) {
-        try {
-            Class<?> providerClass = Class.forName(providerClassName.trim(), true, classLoader);
-            Provider p = (Provider) providerClass.newInstance();
-            providers.add(p);
-            providersNames.put(p.getName(), p);
-            initServiceInfo(p);
-            return true;
-        } catch (ClassNotFoundException ignored) {
-        } catch (IllegalAccessException ignored) {
-        } catch (InstantiationException ignored) {
-        }
-        return false;
-    }
-
-    /**
      * Hash for quick provider access by name.
      */
     private static final HashMap<String, Provider> providersNames
@@ -88,16 +70,18 @@ public class Services {
     static {
         String providerClassName = null;
         int i = 1;
-        ClassLoader cl = Services.class.getClassLoader();
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
 
         while ((providerClassName = Security.getProperty("security.provider." + i++)) != null) {
-            if (!initProvider(providerClassName, cl)) {
-                // Not on the boot classpath. Try the system class-loader.
-                // Note: DO NOT USE A LOCAL FOR GETSYSTEMCLASSLOADER! This will break compile-time
-                //       initialization.
-                if (!initProvider(providerClassName, ClassLoader.getSystemClassLoader())) {
-                    // TODO: Logging?
-                }
+            try {
+                Class<?> providerClass = Class.forName(providerClassName.trim(), true, cl);
+                Provider p = (Provider) providerClass.newInstance();
+                providers.add(p);
+                providersNames.put(p.getName(), p);
+                initServiceInfo(p);
+            } catch (ClassNotFoundException ignored) {
+            } catch (IllegalAccessException ignored) {
+            } catch (InstantiationException ignored) {
             }
         }
         Engine.door.renumProviders();
