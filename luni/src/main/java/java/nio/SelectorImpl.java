@@ -38,6 +38,7 @@ import libcore.io.IoBridge;
 import libcore.io.IoUtils;
 import libcore.io.Libcore;
 
+import static android.system.OsConstants.EINTR;
 import static android.system.OsConstants.POLLERR;
 import static android.system.OsConstants.POLLHUP;
 import static android.system.OsConstants.POLLIN;
@@ -182,7 +183,9 @@ final class SelectorImpl extends AbstractSelector {
                         try {
                             rc = Libcore.os.poll(pollFds.array(), (int) timeout);
                         } catch (ErrnoException errnoException) {
-                            throw errnoException.rethrowAsIOException();
+                            if (errnoException.errno != EINTR) {
+                                throw errnoException.rethrowAsIOException();
+                            }
                         }
                     } finally {
                         if (isBlocking) {

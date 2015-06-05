@@ -553,7 +553,7 @@ static void Posix_execve(JNIEnv* env, jobject, jstring javaFilename, jobjectArra
 
     ExecStrings argv(env, javaArgv);
     ExecStrings envp(env, javaEnvp);
-    TEMP_FAILURE_RETRY(execve(path.c_str(), argv.get(), envp.get()));
+    execve(path.c_str(), argv.get(), envp.get());
 
     throwErrnoException(env, "execve");
 }
@@ -565,7 +565,7 @@ static void Posix_execv(JNIEnv* env, jobject, jstring javaFilename, jobjectArray
     }
 
     ExecStrings argv(env, javaArgv);
-    TEMP_FAILURE_RETRY(execv(path.c_str(), argv.get()));
+    execv(path.c_str(), argv.get());
 
     throwErrnoException(env, "execv");
 }
@@ -726,15 +726,15 @@ static jobjectArray Posix_android_getaddrinfo(JNIEnv* env, jobject, jstring java
 }
 
 static jint Posix_getegid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(getegid());
+    return getegid();
 }
 
 static jint Posix_geteuid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(geteuid());
+    return geteuid();
 }
 
 static jint Posix_getgid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(getgid());
+    return getgid();
 }
 
 static jstring Posix_getenv(JNIEnv* env, jobject, jstring javaName) {
@@ -766,11 +766,11 @@ static jobject Posix_getpeername(JNIEnv* env, jobject, jobject javaFd) {
 }
 
 static jint Posix_getpid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(getpid());
+    return getpid();
 }
 
 static jint Posix_getppid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(getppid());
+    return getppid();
 }
 
 static jobject Posix_getpwnam(JNIEnv* env, jobject, jstring javaName) {
@@ -875,7 +875,7 @@ static jint Posix_gettid(JNIEnv* env __unused, jobject) {
 }
 
 static jint Posix_getuid(JNIEnv*, jobject) {
-    return TEMP_FAILURE_RETRY(getuid());
+    return getuid();
 }
 
 static jstring Posix_if_indextoname(JNIEnv* env, jobject, jint index) {
@@ -1084,40 +1084,7 @@ static jint Posix_poll(JNIEnv* env, jobject, jobjectArray javaStructs, jint time
     for (size_t i = 0; i < count; ++i) {
         monitors.push_back(new AsynchronousCloseMonitor(fds[i].fd));
     }
-
-    int rc;
-    while (true) {
-        timespec before;
-        clock_gettime(CLOCK_MONOTONIC, &before);
-
-        rc = poll(fds.get(), count, timeoutMs);
-        if (rc >= 0 || errno != EINTR) {
-            break;
-        }
-
-        // We got EINTR. Work out how much of the original timeout is still left.
-        if (timeoutMs > 0) {
-            timespec now;
-            clock_gettime(CLOCK_MONOTONIC, &now);
-
-            timespec diff;
-            diff.tv_sec = now.tv_sec - before.tv_sec;
-            diff.tv_nsec = now.tv_nsec - before.tv_nsec;
-            if (diff.tv_nsec < 0) {
-                --diff.tv_sec;
-                diff.tv_nsec += 1000000000;
-            }
-
-            jint diffMs = diff.tv_sec * 1000 + diff.tv_nsec / 1000000;
-            if (diffMs >= timeoutMs) {
-                rc = 0; // We have less than 1ms left anyway, so just time out.
-                break;
-            }
-
-            timeoutMs -= diffMs;
-        }
-    }
-
+    int rc = poll(fds.get(), count, timeoutMs);
     for (size_t i = 0; i < monitors.size(); ++i) {
         delete monitors[i];
     }
@@ -1144,8 +1111,7 @@ static void Posix_posix_fallocate(JNIEnv* env, jobject, jobject javaFd __unused,
                       "fallocate doesn't exist on a Mac");
 #else
     int fd = jniGetFDFromFileDescriptor(env, javaFd);
-    while ((errno = posix_fallocate64(fd, offset, length)) == EINTR) {
-    }
+    errno = TEMP_FAILURE_RETRY(posix_fallocate64(fd, offset, length));
     if (errno != 0) {
         throwErrnoException(env, "posix_fallocate");
     }
@@ -1158,11 +1124,9 @@ static jint Posix_prctl(JNIEnv* env, jobject, jint option __unused, jlong arg2 _
     jniThrowException(env, "java/lang/UnsupportedOperationException", "prctl doesn't exist on a Mac");
     return 0;
 #else
-    int result = TEMP_FAILURE_RETRY(prctl(static_cast<int>(option),
-                                          static_cast<unsigned long>(arg2),
-                                          static_cast<unsigned long>(arg3),
-                                          static_cast<unsigned long>(arg4),
-                                          static_cast<unsigned long>(arg5)));
+    int result = prctl(static_cast<int>(option),
+                       static_cast<unsigned long>(arg2), static_cast<unsigned long>(arg3),
+                       static_cast<unsigned long>(arg4), static_cast<unsigned long>(arg5));
     return throwIfMinusOne(env, "prctl", result);
 #endif
 }
