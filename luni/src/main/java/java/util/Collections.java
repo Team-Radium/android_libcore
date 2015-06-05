@@ -102,10 +102,6 @@ public class Collections {
             throw new IndexOutOfBoundsException();
         }
 
-        @Override public Iterator iterator() {
-            return EMPTY_ITERATOR;
-        }
-
         private Object readResolve() {
             return Collections.EMPTY_LIST;
         }
