@@ -22,7 +22,6 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.concurrent.CountDownLatch;
 import libcore.java.lang.ref.FinalizationTester;
 
 public class ReferenceQueueTest extends junit.framework.TestCase {
@@ -199,29 +198,27 @@ public class ReferenceQueueTest extends junit.framework.TestCase {
         assertNull(rq.poll());
 
         class RemoveThread extends Thread {
-            public final CountDownLatch inBlock = new CountDownLatch(1);
-            public final CountDownLatch outOfBlock = new CountDownLatch(1);
             public void run() {
                 try {
-                    inBlock.countDown();
                     rq.remove(1000L);
                 } catch(InterruptedException ie) {
                     isThrown = true;
                 }
-                outOfBlock.countDown();
             }
         }
         RemoveThread rt = new RemoveThread();
         rt.start();
         try {
-            rt.inBlock.await();
-            // Try to be inside of rq.remove(1000L) if possible.
             Thread.sleep(10);
-        } catch(InterruptedException ie) {}
+        } catch(InterruptedException ie) {
+
+        }
         rt.interrupt();
         try {
-            rt.outOfBlock.await();
-        } catch(InterruptedException ie) {}
+            Thread.sleep(10);
+        } catch(InterruptedException ie) {
+
+        }
         assertTrue(isThrown);
         assertNull(rq.poll());
 
