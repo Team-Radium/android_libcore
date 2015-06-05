@@ -194,10 +194,6 @@ public abstract class CharsetEncoder {
             throw illegalStateException();
         }
 
-        if (!cb.hasRemaining()) {
-            return true;
-        }
-
         CodingErrorAction originalMalformedInputAction = malformedInputAction;
         CodingErrorAction originalUnmappableCharacterAction = unmappableCharacterAction;
         onMalformedInput(CodingErrorAction.REPORT);
