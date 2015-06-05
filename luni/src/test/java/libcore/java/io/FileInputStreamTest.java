@@ -67,7 +67,7 @@ public final class FileInputStreamTest extends TestCase {
     }
 
     public void testSkipInPipes() throws Exception {
-        FileDescriptor[] pipe = Libcore.os.pipe2(0);
+        FileDescriptor[] pipe = Libcore.os.pipe();
         DataFeeder feeder = new DataFeeder(pipe[1]);
         try {
             feeder.start();

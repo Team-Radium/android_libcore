@@ -93,7 +93,7 @@ final class SelectorImpl extends AbstractSelector {
          * configure the pipe so we can fully drain it without blocking.
          */
         try {
-            FileDescriptor[] pipeFds = Libcore.os.pipe2(0);
+            FileDescriptor[] pipeFds = Libcore.os.pipe();
             wakeupIn = pipeFds[0];
             wakeupOut = pipeFds[1];
             IoUtils.setBlocking(wakeupIn, false);
