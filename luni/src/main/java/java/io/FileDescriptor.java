@@ -108,7 +108,7 @@ public final class FileDescriptor {
     /**
      * @hide internal use only
      */
-    public final boolean isSocket$() {
+    public boolean isSocket() {
         return isSocket(descriptor);
     }
 
